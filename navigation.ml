@@ -1,5 +1,8 @@
 open Core
 
+type node = { children : node list;
+              metadata : int list }
+   
 let rec read_node lst =
   match read_header lst with
   | Some (number_of_children, metadata_length, rest)
@@ -7,7 +10,9 @@ let rec read_node lst =
         | Some (children, rest)
           -> (match read_metadata rest metadata_length [] with
               | Some (metadata, rest)
-                -> Some (children, metadata, rest)
+                -> Some ({children = children;
+                          metadata = metadata},
+                         rest)
               | _ -> None)
         | _ -> None)
   | _ -> None
@@ -24,8 +29,8 @@ and read_children lst number_of_children accu =
   if number_of_children = 0
   then Some (List.rev accu, lst)
   else match read_node lst with
-       | Some (children, metadata, rest) as child
-         -> read_children rest (number_of_children - 1) (children :: accu)
+       | Some (child, rest)
+         -> read_children rest (number_of_children - 1) (child :: accu)
        | _ -> None
      
 and read_metadata lst metadata_length accu =
