@@ -10,9 +10,7 @@ let rec read_node lst =
         | Ok (children, rest)
           -> (match read_metadata rest metadata_length [] with
               | Ok (metadata, rest)
-                -> Ok ({children = children;
-                          metadata = metadata},
-                         rest)
+                -> Ok ({children; metadata}, rest)
               | Error st -> Error (("metadata", lst) :: st))
         | Error st -> Error (("children", lst) :: st))
   | Error st -> Error (("header", lst) :: st)
@@ -41,13 +39,11 @@ and read_metadata lst metadata_length accu =
          -> read_metadata rest (metadata_length-1) (x :: accu)
        | [] -> Error [("read_metadata", lst)]
 
-let rec sum_tree tree =
+let rec sum_tree {children; metadata} =
   let sum lst = List.fold_left ~f:(+) ~init:0 lst in
-  match tree with
-  | {children; metadata}
-    -> let sub_sums = List.map ~f:sum_tree children in
-       let my_sum = sum metadata in
-       my_sum + (sum sub_sums)
+  let sub_sums = List.map ~f:sum_tree children in
+  let my_sum = sum metadata in
+  my_sum + (sum sub_sums)
 
 let example = "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2"
 let ex2 = "4 3 2 1 4 2 0 1 3 0 1 4 0 1 5 0 1 6 100 101 3 4 0 1 77 0 1 78 0 1 79 1001 1002 1003 1004 19 0 3 13 13 13 0 3 14 14 14 0 7 1 1 1 1 1 1 1 201 202 203"
